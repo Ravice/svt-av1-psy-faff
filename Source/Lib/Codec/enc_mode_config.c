@@ -8574,8 +8574,8 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
         pcs->cand_reduction_level = 1;
     } else if (enc_mode <= ENC_M0)
         pcs->cand_reduction_level = 0;
-    else if (enc_mode <= ENC_M2)
-        pcs->cand_reduction_level = is_base ? 0 : 1;
+    else if (enc_mode <= ENC_M3)
+        pcs->cand_reduction_level = (is_base || ppcs->temporal_layer_index < 3) ? 0 : 1;
     else if (enc_mode <= ENC_M4) {
         pcs->cand_reduction_level = 1;
     } else if (enc_mode <= ENC_M7) {
@@ -8602,7 +8602,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     } else if (enc_mode <= ENC_M1) {
         pcs->txt_level = is_base ? 2 : 3;
     } else if (enc_mode <= ENC_M3) {
-        pcs->txt_level = is_base ? 2 : 5;
+        pcs->txt_level = (is_base || ppcs->temporal_layer_index < 3) ? 2 : 3; //is_base ? 2 : 5;
     } else if (enc_mode <= ENC_M8) {
         pcs->txt_level = is_base ? 5 : 7;
     } else {
@@ -8719,7 +8719,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
                 pcs->dist_based_ref_pruning = is_base ? 3 : 6;
             }
         } else if (enc_mode <= ENC_M5)
-            pcs->dist_based_ref_pruning = is_base ? 1 : 5;
+            pcs->dist_based_ref_pruning = (is_base ? 1 : MIN(5, pcs->temporal_layer_index+1)); //is_base ? 1 : 5;
         else
             pcs->dist_based_ref_pruning = is_base ? 2 : 5;
     } else {
@@ -8752,7 +8752,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     } else if (enc_mode <= ENC_M2) {
         pcs->txs_level = 2;
     } else if (enc_mode <= ENC_M3) {
-        pcs->txs_level = 3;
+        pcs->txs_level = is_base ? 2 : 3; //pcs->txs_level = 3;
     } else if (enc_mode <= ENC_M6) {
         pcs->txs_level = is_base ? 3 : 0;
     } else if (enc_mode <= ENC_M10) {
@@ -8778,7 +8778,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     // Set tx_mode for the frame header
     frm_hdr->tx_mode = (pcs->txs_level) ? TX_MODE_SELECT : TX_MODE_LARGEST;
     // Set the level for nic
-    pcs->nic_level = svt_aom_get_nic_level(enc_mode, is_base, pcs->scs->static_config.qp, scs->seq_qp_mod);
+    pcs->nic_level = svt_aom_get_nic_level(enc_mode, (is_base || is_layer1), pcs->scs->static_config.qp, scs->seq_qp_mod);
 
     // Set the level for SQ me-search
     pcs->md_sq_mv_search_level = 0;
