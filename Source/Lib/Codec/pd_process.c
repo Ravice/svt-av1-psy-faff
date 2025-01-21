@@ -680,9 +680,9 @@ static void calc_mini_gop_activity_new(
 
     dg_level = dg_level & 7;
     const float BS = 
-        (dg_level==2)? 0.829826533794403076172f:    // CUBE ROOT OF 4/7
-        (dg_level==3)? 0.843432664871215820312f:    // CUBE ROOT OF 3/5
-        (dg_level==4)? 0.873580455780029296875f:    // CUBE ROOT OF 2/3
+        (dg_level==2)? 0.843432664871215820312f:    // CUBE ROOT OF 3/5
+        (dg_level==3)? 0.873580455780029296875f:    // CUBE ROOT OF 2/3
+        (dg_level==4)? 0.890898685122629732574f:    // between
         0.908560296416069829445f;                   // CUBE ROOT OF 3/4
 
     const uint8_t LAYER =
