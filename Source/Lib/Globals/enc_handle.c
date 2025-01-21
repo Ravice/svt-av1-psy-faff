@@ -4323,7 +4323,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         if (scs->static_config.look_ahead_distance < mg_size)
             tpl_lad_mg = 0;
         else if (scs->tpl)
-            tpl_lad_mg = 1;
+            tpl_lad_mg = scs->static_config.look_ahead_distance / mg_size;
         else
             tpl_lad_mg = 0;
 
@@ -4331,7 +4331,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->input_resolution >= INPUT_SIZE_8K_RANGE) {
             tpl_lad_mg = MIN(1, tpl_lad_mg);
     }
-        scs->tpl_lad_mg = MIN(2, tpl_lad_mg);// lad_mg is capped to 2 because tpl was optimised only for 1,2 and 3 mini-gops
+        scs->tpl_lad_mg = MIN(6, tpl_lad_mg);   // lad_mg is capped to 6 as anything past 6 is buggy and random minigops get stuck at base QP
+                                                // metrics are consistently better up to 6 MG anyway
         if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CQP_OR_CRF)
             scs->lad_mg = scs->tpl_lad_mg;
         else
