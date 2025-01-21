@@ -103,11 +103,11 @@ uint8_t svt_aom_get_enable_me_16x16(EncMode enc_mode) {
 uint8_t svt_aom_get_gm_core_level(EncMode enc_mode, bool super_res_off) {
     uint8_t gm_level = 0;
     if (super_res_off) {
-        if (enc_mode <= ENC_MRP)
+        if (enc_mode <= ENC_M1)
             gm_level = 1;
-        else if (enc_mode <= ENC_MR)
+        else if (enc_mode <= ENC_M4)
             gm_level = 2;
-        else if (enc_mode <= ENC_M2)
+        else if (enc_mode <= ENC_M6)
             gm_level = 4;
         else
             gm_level = 0;
@@ -760,7 +760,7 @@ void svt_aom_sig_deriv_me(SequenceControlSet *scs, PictureParentControlSet *pcs,
     if (sc_class1) {
         if (enc_mode <= ENC_MRS)
             me_ref_prune_level = 0;
-        else if (enc_mode <= ENC_M2)
+        else if (enc_mode <= ENC_M3)
             me_ref_prune_level = 1;
         else if (enc_mode <= ENC_M8)
             me_ref_prune_level = 3;
@@ -773,7 +773,7 @@ void svt_aom_sig_deriv_me(SequenceControlSet *scs, PictureParentControlSet *pcs,
             me_ref_prune_level = 1;
         } else if (enc_mode <= ENC_M0) {
             me_ref_prune_level = is_base ? 1 : 2;
-        } else if (enc_mode <= ENC_M1) {
+        } else if (enc_mode <= ENC_M3) {
             me_ref_prune_level = is_base ? 1 : 4;
         } else if (enc_mode <= ENC_M5) {
             me_ref_prune_level = is_base ? 1 : 5;
@@ -1469,7 +1469,7 @@ static void svt_aom_set_sg_filter_ctrls(Av1Common *cm, uint8_t sg_filter_lvl) {
 static uint8_t svt_aom_get_wn_filter_level(EncMode enc_mode, uint8_t input_resolution, Bool is_not_last_layer,
                                            const uint8_t is_base) {
     uint8_t wn_filter_lvl = 0;
-    if (enc_mode <= ENC_M2)
+    if (enc_mode <= ENC_M3)
         wn_filter_lvl = 1;
     else if (enc_mode <= ENC_M8)
         wn_filter_lvl = is_not_last_layer ? 5 : 0;
@@ -1491,7 +1491,7 @@ static uint8_t svt_aom_get_sg_filter_level(EncMode enc_mode, uint8_t input_resol
     if (enc_mode <= ENC_M0)
         sg_filter_lvl = 1;
     else if (enc_mode <= ENC_M3)
-        sg_filter_lvl = 3;
+        sg_filter_lvl = 2;
     else
         sg_filter_lvl = 0;
 
@@ -1913,7 +1913,7 @@ void svt_aom_sig_deriv_multi_processes(SequenceControlSet *scs, PictureParentCon
                 }
             } else if (enc_mode <= ENC_M1)
                 pcs->cdef_level = 1;
-            else if (enc_mode <= ENC_M2)
+            else if (enc_mode <= ENC_M3)
                 pcs->cdef_level = 2;
             else if (enc_mode <= ENC_M4)
                 pcs->cdef_level = 4;
@@ -1969,7 +1969,7 @@ void svt_aom_sig_deriv_multi_processes(SequenceControlSet *scs, PictureParentCon
     pcs->tune_tpl_for_chroma = 0;
 #endif
     if (scs->enable_hbd_mode_decision == DEFAULT)
-        if (enc_mode <= ENC_M2)
+        if (enc_mode <= ENC_M3)
             pcs->hbd_md = 1;
         else if (enc_mode <= ENC_M4)
             pcs->hbd_md = 2;
@@ -7843,6 +7843,8 @@ void svt_aom_sig_deriv_enc_dec(SequenceControlSet *scs, PictureControlSet *pcs, 
         intra_level = is_base ? 1 : 2;
     else if (enc_mode <= ENC_M2)
         intra_level = is_base ? 1 : 3;
+    else if (enc_mode <= ENC_M3)
+        intra_level = is_base ? 1 : MIN(4, pcs->temporal_layer_index);
     else if (enc_mode <= ENC_M4)
         intra_level = is_base ? 1 : 4;
     else if (enc_mode <= ENC_M8)
@@ -8333,6 +8335,8 @@ uint8_t get_inter_compound_level(EncMode enc_mode) {
         comp_level = 3;
     else if (enc_mode <= ENC_M2)
         comp_level = 4;
+    else if (enc_mode <= ENC_M4)
+        comp_level = 5;
     else
         comp_level = 0;
 
