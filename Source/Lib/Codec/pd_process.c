@@ -668,6 +668,67 @@ static void calc_mini_gop_activity(
     }
 }
 
+static void calc_mini_gop_activity_new(
+    uint8_t dg_level,
+    PictureDecisionContext* ctx,
+    EncodeContext* enc_ctx,
+    uint64_t top_layer_idx, uint64_t top_layer_dist, uint8_t top_layer_perc_active, uint8_t top_layer_perc_cplx,
+    uint64_t sub_layer_idx0, uint64_t sub_layer_dist0, uint8_t sub_layer0_perc_active, uint8_t sub_layer0_perc_cplx,
+    uint64_t sub_layer_idx1, uint64_t sub_layer_dist1, uint8_t sub_layer1_perc_active, uint8_t sub_layer1_perc_cplx,
+    int16_t top_layer_mv_in_out_count, int16_t sub_layer_mv_in_out_count1, int16_t sub_layer_mv_in_out_count2) {
+    (void)top_layer_mv_in_out_count;
+
+    dg_level = dg_level & 7;
+    const float BS = 
+        (dg_level==2)? 0.829826533794403076172f:    // CUBE ROOT OF 4/7
+        (dg_level==3)? 0.843432664871215820312f:    // CUBE ROOT OF 3/5
+        (dg_level==4)? 0.873580455780029296875f:    // CUBE ROOT OF 2/3
+        0.908560296416069829445f;                   // CUBE ROOT OF 3/4
+
+    const uint8_t LAYER =
+	    (sub_layer_idx1 == L5_1_INDEX)? 5:
+		(sub_layer_idx1 == L4_1_INDEX || sub_layer_idx1 == L4_3_INDEX)? 4:
+		3;
+
+	const float bias = 	// exponential bias based on layer depth
+		(LAYER==5)? BS:
+		(LAYER==4)? BS*BS:
+		BS*BS*BS;
+
+	#define DMG_GEOMEAN TRUE
+	const float sub_avg =
+		DMG_GEOMEAN? sqrtf((float)sub_layer_dist0 * (float)sub_layer_dist1):
+		0.5f * (float)(sub_layer_dist0 + sub_layer_dist1);
+	const float dist_ratio = (top_layer_dist > 0)? (sub_avg / (float)top_layer_dist) : 255.0f;
+
+	#define DMG_THRESHOLD FALSE
+	const bool cnd_bias_thresh = DMG_THRESHOLD? ((top_layer_dist > LOW_DIST_TH) && (sub_layer_dist0 < HIGH_DIST_TH) && (sub_layer_dist1 < HIGH_DIST_TH)) :TRUE;
+	const bool cnd_bias = cnd_bias_thresh && (dist_ratio < bias);
+
+	#ifdef DMG_DEBUG
+			if (LAYER==5) printf("\n");
+			printf("[DMG] ");
+			printf( (LAYER==5)? "L5\t": (LAYER==4)? "->L4\t": " >=>L3\t");
+			printf("IDX: %llu\t", sub_layer_idx1);
+			printf("distortion: (%llu:%llu | %llu)\t", sub_layer_dist0, sub_layer_dist1, top_layer_dist);
+			if (!cnd_bias) {
+				printf("no split: ");
+				if (!cnd_bias_thresh) printf("low L%u distortion\t", LAYER+1);
+				if (dist_ratio > bias) printf("required distortion bias: %.2f > %.2f\t", dist_ratio, bias);
+				printf("\n");
+			}
+	#endif
+
+	if (cnd_bias) {
+		#ifdef DMG_DEBUG
+			printf("splitting: distortion %.2f < %.2f\n", dist_ratio, bias);
+		#endif
+        ctx->mini_gop_activity_array[top_layer_idx] = TRUE;
+        ctx->mini_gop_activity_array[sub_layer_idx0] = FALSE;
+        ctx->mini_gop_activity_array[sub_layer_idx1] = FALSE;
+    }
+}
+
 static void eval_sub_mini_gop(
     PictureDecisionContext* ctx,
     EncodeContext* enc_ctx,
@@ -708,6 +769,56 @@ static void eval_sub_mini_gop(
     int16_t mv_in_out_count_mid_start = ctx->mv_in_out_count;
 
     calc_mini_gop_activity(
+        ctx,
+        enc_ctx,
+        top_layer_idx, dist_end_start, perc_active_end_start, perc_cplx_end_start,
+        sub_layer_idx0, dist_mid_start, perc_active_mid_start, perc_cplx_mid_start,
+        sub_layer_idx1, dist_end_mid, perc_active_end_mid, perc_cplx_end_mid,
+        mv_in_out_count_end_start, mv_in_out_count_end_mid, mv_in_out_count_mid_start);
+}
+
+static void eval_sub_mini_gop_new(
+    uint8_t dg_level,
+    PictureDecisionContext* ctx,
+    EncodeContext* enc_ctx,
+    uint64_t top_layer_idx,
+    uint64_t sub_layer_idx0,
+    uint64_t sub_layer_idx1,
+    PictureParentControlSet *start_pcs,
+    PictureParentControlSet *mid_pcs,
+    PictureParentControlSet *end_pcs) {
+
+    early_hme(
+        ctx,
+        end_pcs,
+        start_pcs);
+
+    uint64_t dist_end_start = ctx->norm_dist;
+    uint8_t perc_cplx_end_start = ctx->perc_cplx;
+    uint8_t perc_active_end_start = ctx->perc_active;
+    int16_t mv_in_out_count_end_start = ctx->mv_in_out_count;
+    early_hme(
+        ctx,
+        end_pcs,
+        mid_pcs);
+
+    uint64_t dist_end_mid = ctx->norm_dist;
+    uint8_t perc_cplx_end_mid = ctx->perc_cplx;
+    uint8_t perc_active_end_mid = ctx->perc_active;
+    int16_t mv_in_out_count_end_mid = ctx->mv_in_out_count;
+
+    early_hme(
+        ctx,
+        mid_pcs,
+        start_pcs);
+
+    uint64_t dist_mid_start = ctx->norm_dist;
+    uint8_t perc_cplx_mid_start = ctx->perc_cplx;
+    uint8_t perc_active_mid_start = ctx->perc_active;
+    int16_t mv_in_out_count_mid_start = ctx->mv_in_out_count;
+
+    calc_mini_gop_activity_new(
+        dg_level,
         ctx,
         enc_ctx,
         top_layer_idx, dist_end_start, perc_active_end_start, perc_cplx_end_start,
@@ -806,7 +917,7 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
     }
 
     // 6L vs. 5L
-    if (scs->enable_dg && ctx->mini_gop_activity_array[L6_INDEX] == FALSE)
+    if (scs->enable_dg == 1 && ctx->mini_gop_activity_array[L6_INDEX] == FALSE)
     {
         PictureParentControlSet* start_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[0]->object_ptr;
         PictureParentControlSet* mid_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[((1 << scs->static_config.hierarchical_levels) >> 1) - 1]->object_ptr;
@@ -820,7 +931,92 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
             start_pcs,
             mid_pcs,
             end_pcs);
-    }
+    } else if (scs->enable_dg) {
+		PictureParentControlSet* start_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[0]->object_ptr;
+		PictureParentControlSet* mid_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[((1 << scs->static_config.hierarchical_levels) >> 1) - 1]->object_ptr;
+		PictureParentControlSet* end_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[enc_ctx->pre_assignment_buffer_count - 1]->object_ptr;
+		// LAYER 6
+        if (ctx->mini_gop_activity_array[L6_INDEX] == FALSE) eval_sub_mini_gop_new(
+            scs->enable_dg,
+			ctx, enc_ctx,
+			L6_INDEX,
+			L5_0_INDEX, L5_1_INDEX,
+			start_pcs, mid_pcs, end_pcs
+		);
+		
+		const int TL4_idx = ((1 << (scs->static_config.hierarchical_levels - 1)) >> 1);
+		const int TL3_idx = ((1 << (scs->static_config.hierarchical_levels - 2)) >> 1);
+	
+		// LAYER 5 LEFT
+        if (scs->enable_dg & 24)
+        {
+            if (ctx->mini_gop_activity_array[L5_0_INDEX] == FALSE) {
+                PictureParentControlSet* mid1_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[TL4_idx - 1]->object_ptr;
+                PictureParentControlSet* mid11_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[TL3_idx - 1]->object_ptr;
+                PictureParentControlSet* mid12_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[(3*TL3_idx) - 1]->object_ptr;
+                
+                eval_sub_mini_gop_new(
+                    scs->enable_dg,
+                    ctx, enc_ctx,
+                    L5_0_INDEX,
+                    L4_0_INDEX, L4_1_INDEX,
+                    start_pcs, mid1_pcs, mid_pcs
+                );
+                // LAYER 4 LEFT-LEFT
+                if (scs->enable_dg & 16)
+                {
+                    if (ctx->mini_gop_activity_array[L4_0_INDEX] == FALSE) eval_sub_mini_gop_new(
+                        scs->enable_dg,
+                        ctx, enc_ctx,
+                        L4_0_INDEX,
+                        L3_0_INDEX, L3_1_INDEX,
+                        start_pcs, mid11_pcs, mid1_pcs
+                    );
+                    // LAYER 4 LEFT-RIGHT
+                    if (ctx->mini_gop_activity_array[L4_1_INDEX] == FALSE) eval_sub_mini_gop_new(
+                        scs->enable_dg,
+                        ctx, enc_ctx,
+                        L4_1_INDEX, 
+                        L3_2_INDEX, L3_3_INDEX,
+                        mid1_pcs, mid12_pcs, mid_pcs
+                    );
+                }
+            } 
+            // LAYER 5 RIGHT
+            if (ctx->mini_gop_activity_array[L5_1_INDEX] == FALSE) {
+                PictureParentControlSet* mid2_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[(3*TL4_idx) - 1]->object_ptr;
+                PictureParentControlSet* mid21_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[(5*TL3_idx) - 1]->object_ptr;
+                PictureParentControlSet* mid22_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[(7*TL3_idx) - 1]->object_ptr;
+                    
+                eval_sub_mini_gop_new(
+                    scs->enable_dg,
+                    ctx, enc_ctx,
+                    L5_1_INDEX,
+                    L4_2_INDEX,	L4_3_INDEX,
+                    mid_pcs, mid2_pcs, end_pcs
+                );
+                // LAYER 4 RIGHT-LEFT
+                if (scs->enable_dg & 16)
+                {
+                    if (ctx->mini_gop_activity_array[L4_2_INDEX] == FALSE) eval_sub_mini_gop_new(
+                        scs->enable_dg,
+                        ctx, enc_ctx,
+                        L4_2_INDEX, 
+                        L3_4_INDEX, L3_5_INDEX,
+                        mid_pcs, mid21_pcs, mid2_pcs
+                    );
+                    // LAYER 4 RIGHT-RIGHT
+                    if (ctx->mini_gop_activity_array[L4_3_INDEX] == FALSE) eval_sub_mini_gop_new(
+                        scs->enable_dg,
+                        ctx, enc_ctx,
+                        L4_3_INDEX,
+                        L3_6_INDEX, L3_7_INDEX,
+                        mid2_pcs, mid22_pcs, end_pcs
+                    );
+                }
+            }
+		}
+	}
     ctx->list0_only = 0;
     if (scs->list0_only_base_ctrls.enabled) {
         if (scs->list0_only_base_ctrls.list0_only_base_th == ((uint16_t)~0)) {

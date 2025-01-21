@@ -1090,7 +1090,7 @@ ConfigEntry config_entry_specific[] = {
      MFMV_ENABLE_NEW_TOKEN,
      "Motion Field Motion Vector control, default is -1 [-1: auto, 0-1]",
      set_cfg_generic_token},
-    {SINGLE_INPUT, DG_ENABLE_NEW_TOKEN, "Dynamic GoP control, default is 1 [0-1]", set_cfg_generic_token},
+    {SINGLE_INPUT, DG_ENABLE_NEW_TOKEN, "Dynamic GoP control, default is 1 [(L5)0-5, (L4)10-13, (L3)18-21]", set_cfg_generic_token},
     {SINGLE_INPUT, FAST_DECODE_TOKEN, "Fast Decoder levels, default is 0 [0-2]", set_cfg_generic_token},
     // --- start: ALTREF_FILTERING_SUPPORT
     {SINGLE_INPUT,

@@ -927,8 +927,9 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * 0 = disable Dynamic GoP
     * 1 = enable Dynamic GoP
+    * 2-5, 9-13, 17-21 = enable new Dyanmic GoP
     *  Default is 1. */
-    Bool enable_dg;
+    uint8_t enable_dg;
 
     /**
      * @brief startup_mg_size

@@ -530,9 +530,9 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-    if (config->enable_dg > 1) {
+    if ((config->enable_dg > 1) && (((config->enable_dg & 7) > 5) || (config->enable_dg & 7) < 1)) {
         SVT_ERROR(
-            "Instance %u: Invalid dynamic GoP flag [0 - 1], your "
+            "Instance %u: Invalid dynamic GoP flag [0-5, 9-14, 17-21], your "
             "input: %d\n",
             channel_number + 1,
             config->enable_dg);
@@ -2170,6 +2170,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"noise-norm-strength", &config_struct->noise_norm_strength},
         {"fast-decode", &config_struct->fast_decode},
         {"enable-tf", &config_struct->enable_tf},
+        {"enable-dg", &config_struct->enable_dg},
     };
     const size_t uint8_opts_size = sizeof(uint8_opts) / sizeof(uint8_opts[0]);
 
@@ -2283,7 +2284,6 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"enable-overlays", &config_struct->enable_overlays},
         {"enable-force-key-frames", &config_struct->force_key_frames},
         {"enable-qm", &config_struct->enable_qm},
-        {"enable-dg", &config_struct->enable_dg},
         {"gop-constraint-rc", &config_struct->gop_constraint_rc},
         {"enable-variance-boost", &config_struct->enable_variance_boost},
         {"enable-alt-curve", &config_struct->enable_alt_curve},
