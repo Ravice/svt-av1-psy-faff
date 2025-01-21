@@ -686,43 +686,43 @@ static void calc_mini_gop_activity_new(
         0.908560296416069829445f;                   // CUBE ROOT OF 3/4
 
     const uint8_t LAYER =
-	    (sub_layer_idx1 == L5_1_INDEX)? 5:
-		(sub_layer_idx1 == L4_1_INDEX || sub_layer_idx1 == L4_3_INDEX)? 4:
-		3;
+        (sub_layer_idx1 == L5_1_INDEX)? 5:
+        (sub_layer_idx1 == L4_1_INDEX || sub_layer_idx1 == L4_3_INDEX)? 4:
+        3;
 
-	const float bias = 	// exponential bias based on layer depth
-		(LAYER==5)? BS:
-		(LAYER==4)? BS*BS:
-		BS*BS*BS;
+    const float bias = 	// exponential bias based on layer depth
+        (LAYER==5)? BS:
+        (LAYER==4)? BS*BS:
+        BS*BS*BS;
 
-	#define DMG_GEOMEAN TRUE
-	const float sub_avg =
-		DMG_GEOMEAN? sqrtf((float)sub_layer_dist0 * (float)sub_layer_dist1):
-		0.5f * (float)(sub_layer_dist0 + sub_layer_dist1);
-	const float dist_ratio = (top_layer_dist > 0)? (sub_avg / (float)top_layer_dist) : 255.0f;
+    #define DMG_GEOMEAN TRUE
+    const float sub_avg =
+        DMG_GEOMEAN? sqrtf((float)sub_layer_dist0 * (float)sub_layer_dist1):
+        0.5f * (float)(sub_layer_dist0 + sub_layer_dist1);
+    const float dist_ratio = (top_layer_dist > 0)? (sub_avg / (float)top_layer_dist) : 255.0f;
 
-	#define DMG_THRESHOLD FALSE
-	const bool cnd_bias_thresh = DMG_THRESHOLD? ((top_layer_dist > LOW_DIST_TH) && (sub_layer_dist0 < HIGH_DIST_TH) && (sub_layer_dist1 < HIGH_DIST_TH)) :TRUE;
-	const bool cnd_bias = cnd_bias_thresh && (dist_ratio < bias);
+    #define DMG_THRESHOLD FALSE
+    const bool cnd_bias_thresh = DMG_THRESHOLD? ((top_layer_dist > LOW_DIST_TH) && (sub_layer_dist0 < HIGH_DIST_TH) && (sub_layer_dist1 < HIGH_DIST_TH)) :TRUE;
+    const bool cnd_bias = cnd_bias_thresh && (dist_ratio < bias);
 
-	#ifdef DMG_DEBUG
-			if (LAYER==5) printf("\n");
-			printf("[DMG] ");
-			printf( (LAYER==5)? "L5\t": (LAYER==4)? "->L4\t": " >=>L3\t");
-			printf("IDX: %llu\t", sub_layer_idx1);
-			printf("distortion: (%llu:%llu | %llu)\t", sub_layer_dist0, sub_layer_dist1, top_layer_dist);
-			if (!cnd_bias) {
-				printf("no split: ");
-				if (!cnd_bias_thresh) printf("low L%u distortion\t", LAYER+1);
-				if (dist_ratio > bias) printf("required distortion bias: %.2f > %.2f\t", dist_ratio, bias);
-				printf("\n");
-			}
-	#endif
+    #ifdef DMG_DEBUG
+    if (LAYER==5) printf("\n");
+        printf("[DMG] ");
+        printf( (LAYER==5)? "L5\t": (LAYER==4)? "->L4\t": " >=>L3\t");
+        printf("IDX: %llu\t", sub_layer_idx1);
+        printf("distortion: (%llu:%llu | %llu)\t", sub_layer_dist0, sub_layer_dist1, top_layer_dist);
+        if (!cnd_bias) {
+            printf("no split: ");
+            if (!cnd_bias_thresh) printf("low L%u distortion\t", LAYER+1);
+            if (dist_ratio > bias) printf("required distortion bias: %.2f > %.2f\t", dist_ratio, bias);
+            printf("\n");
+        }
+    #endif
 
-	if (cnd_bias) {
-		#ifdef DMG_DEBUG
-			printf("splitting: distortion %.2f < %.2f\n", dist_ratio, bias);
-		#endif
+    if (cnd_bias) {
+        #ifdef DMG_DEBUG
+            printf("splitting: distortion %.2f < %.2f\n", dist_ratio, bias);
+        #endif
         ctx->mini_gop_activity_array[top_layer_idx] = TRUE;
         ctx->mini_gop_activity_array[sub_layer_idx0] = FALSE;
         ctx->mini_gop_activity_array[sub_layer_idx1] = FALSE;
@@ -788,29 +788,20 @@ static void eval_sub_mini_gop_new(
     PictureParentControlSet *mid_pcs,
     PictureParentControlSet *end_pcs) {
 
-    early_hme(
-        ctx,
-        end_pcs,
-        start_pcs);
+    early_hme(ctx, end_pcs, start_pcs);
 
     uint64_t dist_end_start = ctx->norm_dist;
     uint8_t perc_cplx_end_start = ctx->perc_cplx;
     uint8_t perc_active_end_start = ctx->perc_active;
     int16_t mv_in_out_count_end_start = ctx->mv_in_out_count;
-    early_hme(
-        ctx,
-        end_pcs,
-        mid_pcs);
+    early_hme(ctx, end_pcs, mid_pcs);
 
     uint64_t dist_end_mid = ctx->norm_dist;
     uint8_t perc_cplx_end_mid = ctx->perc_cplx;
     uint8_t perc_active_end_mid = ctx->perc_active;
     int16_t mv_in_out_count_end_mid = ctx->mv_in_out_count;
 
-    early_hme(
-        ctx,
-        mid_pcs,
-        start_pcs);
+    early_hme(ctx, mid_pcs, start_pcs);
 
     uint64_t dist_mid_start = ctx->norm_dist;
     uint8_t perc_cplx_mid_start = ctx->perc_cplx;
@@ -932,22 +923,22 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
             mid_pcs,
             end_pcs);
     } else if (scs->enable_dg) {
-		PictureParentControlSet* start_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[0]->object_ptr;
-		PictureParentControlSet* mid_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[((1 << scs->static_config.hierarchical_levels) >> 1) - 1]->object_ptr;
-		PictureParentControlSet* end_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[enc_ctx->pre_assignment_buffer_count - 1]->object_ptr;
-		// LAYER 6
+        PictureParentControlSet* start_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[0]->object_ptr;
+        PictureParentControlSet* mid_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[((1 << scs->static_config.hierarchical_levels) >> 1) - 1]->object_ptr;
+        PictureParentControlSet* end_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[enc_ctx->pre_assignment_buffer_count - 1]->object_ptr;
+        // LAYER 6
         if (ctx->mini_gop_activity_array[L6_INDEX] == FALSE) eval_sub_mini_gop_new(
             scs->enable_dg,
-			ctx, enc_ctx,
-			L6_INDEX,
-			L5_0_INDEX, L5_1_INDEX,
-			start_pcs, mid_pcs, end_pcs
-		);
-		
-		const int TL4_idx = ((1 << (scs->static_config.hierarchical_levels - 1)) >> 1);
-		const int TL3_idx = ((1 << (scs->static_config.hierarchical_levels - 2)) >> 1);
-	
-		// LAYER 5 LEFT
+            ctx, enc_ctx,
+            L6_INDEX,
+            L5_0_INDEX, L5_1_INDEX,
+            start_pcs, mid_pcs, end_pcs
+        );
+
+        const int TL4_idx = ((1 << (scs->static_config.hierarchical_levels - 1)) >> 1);
+        const int TL3_idx = ((1 << (scs->static_config.hierarchical_levels - 2)) >> 1);
+
+        // LAYER 5 LEFT
         if (scs->enable_dg & 24)
         {
             if (ctx->mini_gop_activity_array[L5_0_INDEX] == FALSE) {
@@ -1015,8 +1006,8 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
                     );
                 }
             }
-		}
-	}
+        }
+    }
     ctx->list0_only = 0;
     if (scs->list0_only_base_ctrls.enabled) {
         if (scs->list0_only_base_ctrls.list0_only_base_th == ((uint16_t)~0)) {
