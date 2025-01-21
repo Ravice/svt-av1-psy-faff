@@ -678,11 +678,11 @@ static void calc_mini_gop_activity_new(
     int16_t top_layer_mv_in_out_count, int16_t sub_layer_mv_in_out_count1, int16_t sub_layer_mv_in_out_count2) {
     (void)top_layer_mv_in_out_count;
 
-    dg_level = dg_level & 7;
+    const uint8_t bias_level = dg_level & 7;
     const float BS = 
-        (dg_level==2)? 0.843432664871215820312f:    // CUBE ROOT OF 3/5
-        (dg_level==3)? 0.873580455780029296875f:    // CUBE ROOT OF 2/3
-        (dg_level==4)? 0.890898685122629732574f:    // between
+        (bias_level==2)? 0.843432664871215820312f:    // CUBE ROOT OF 3/5
+        (bias_level==3)? 0.873580455780029296875f:    // CUBE ROOT OF 2/3
+        (bias_level==4)? 0.890898685122629732574f:    // between
         0.908560296416069829445f;                   // CUBE ROOT OF 3/4
 
     const uint8_t LAYER =
@@ -690,10 +690,11 @@ static void calc_mini_gop_activity_new(
         (sub_layer_idx1 == L4_1_INDEX || sub_layer_idx1 == L4_3_INDEX)? 4:
         3;
 
-    const float bias = 	// exponential bias based on layer depth
+    const float SBS = (dg_level & 32)? BS*sqrt(BS): BS;
+    const float bias = // exponential bias based on layer depth
         (LAYER==5)? BS:
-        (LAYER==4)? BS*BS:
-        BS*BS*BS;
+        (LAYER==4)? BS*SBS:
+        BS*SBS*SBS;
 
     #define DMG_GEOMEAN TRUE
     const float sub_avg =
