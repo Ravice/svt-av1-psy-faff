@@ -568,12 +568,7 @@ static int get_gfu_boost_from_r0_lap(double min_factor, double max_factor, doubl
 int svt_av1_get_deltaq_offset(EbBitDepth bit_depth, int qindex, double beta, uint8_t is_intra) {
     assert(beta > 0.0);
     int q = svt_aom_dc_quant_qtx(qindex, 0, bit_depth);
-    int newq;
-    // use a less aggressive action when lowering the q for non I_slice
-    if (!is_intra && beta > 1)
-        newq = (int)rint(q / sqrt(sqrt(beta)));
-    else
-        newq = (int)rint(q / sqrt(beta));
+    int newq = (int)rint(q / sqrt(beta));
     int orig_qindex = qindex;
     if (newq == q) {
         return 0;
