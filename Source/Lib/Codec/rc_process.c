@@ -865,11 +865,19 @@ static int crf_qindex_calc(PictureControlSet *pcs, RATE_CONTROL *rc, int qindex)
             (ppcs->tpl_group_size < (uint32_t)(2 << pcs->ppcs->hierarchical_levels)))
             weight = MIN(weight + 0.1, 1);
 
+#define POWER_QPSC TRUE
+#if POWER_QPSC
+        double qstep_ratio =
+            pcs->scs->static_config.qp_scale_compress_strength == 1? sqrt(ppcs->r0):
+            pcs->scs->static_config.qp_scale_compress_strength == 2? pow(ppcs->r0, 0.40824830532073974609375f):
+            cbrt(ppcs->r0);
+#else
         double qstep_ratio = sqrt(ppcs->r0) * weight * qp_scale_compress_weight[pcs->scs->static_config.qp_scale_compress_strength];
         if (pcs->scs->static_config.qp_scale_compress_strength) {
             // clamp qstep_ratio so it doesn't get past the weight value
             qstep_ratio = MIN(weight, qstep_ratio);
         }
+#endif
 
         const int    qindex_from_qstep_ratio = svt_av1_get_q_index_from_qstep_ratio(qindex, qstep_ratio, bit_depth);
 #if DEBUG_QP_SCALING
