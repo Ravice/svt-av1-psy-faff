@@ -8360,7 +8360,7 @@ uint8_t svt_aom_get_inter_intra_level(EncMode enc_mode, uint8_t is_base, uint8_t
         inter_intra_level = 1;
     else if (enc_mode <= ENC_MR)
         inter_intra_level = 2;
-    else if (enc_mode <= ENC_M2)
+    else if (enc_mode <= ENC_M3)
         inter_intra_level = (transition_present || is_base) ? 2 : 0;
     else if (enc_mode <= ENC_M9)
         inter_intra_level = transition_present ? 2 : 0;
@@ -8733,7 +8733,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     pcs->nsq_search_level = svt_aom_get_nsq_search_level(pcs, enc_mode, pcs->coeff_lvl, scs->static_config.qp);
     // Set the level for inter-intra level
     if (!is_islice && scs->seq_header.enable_interintra_compound) {
-        pcs->inter_intra_level = svt_aom_get_inter_intra_level(enc_mode, is_base, transition_present);
+        pcs->inter_intra_level = svt_aom_get_inter_intra_level(enc_mode, (is_base || (is_ref && ppcs->temporal_layer_index < 4)), transition_present);
     } else
         pcs->inter_intra_level = 0;
     if (rtc_tune) {
