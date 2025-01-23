@@ -8575,7 +8575,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     } else if (enc_mode <= ENC_M0)
         pcs->cand_reduction_level = 0;
     else if (enc_mode <= ENC_M3)
-        pcs->cand_reduction_level = (is_base || ppcs->temporal_layer_index < 3) ? 0 : 1;
+        pcs->cand_reduction_level = (is_base || ppcs->temporal_layer_index < 3 && is_not_last_layer)  ? 0 : 1;
     else if (enc_mode <= ENC_M4) {
         pcs->cand_reduction_level = 1;
     } else if (enc_mode <= ENC_M7) {
@@ -8602,7 +8602,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     } else if (enc_mode <= ENC_M1) {
         pcs->txt_level = is_base ? 2 : 3;
     } else if (enc_mode <= ENC_M3) {
-        pcs->txt_level = (is_base || ppcs->temporal_layer_index < 3) ? 2 : 3; //is_base ? 2 : 5;
+        pcs->txt_level = (is_base || ppcs->temporal_layer_index < 3 && is_not_last_layer) ? 2 : 3; //is_base ? 2 : 5;
     } else if (enc_mode <= ENC_M8) {
         pcs->txt_level = is_base ? 5 : 7;
     } else {
@@ -8718,8 +8718,10 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
             } else {
                 pcs->dist_based_ref_pruning = is_base ? 3 : 6;
             }
-        } else if (enc_mode <= ENC_M5)
-            pcs->dist_based_ref_pruning = (is_base ? 1 : MIN(5, pcs->temporal_layer_index+1)); //is_base ? 1 : 5;
+        } else if (enc_mode <= ENC_M3)
+            pcs->dist_based_ref_pruning = (is_base ? 1 : MIN(5, pcs->temporal_layer_index+1));
+        else if (enc_mode <= ENC_M5)
+            pcs->dist_based_ref_pruning = is_base ? 1 : 5;
         else
             pcs->dist_based_ref_pruning = is_base ? 2 : 5;
     } else {
@@ -8733,7 +8735,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     pcs->nsq_search_level = svt_aom_get_nsq_search_level(pcs, enc_mode, pcs->coeff_lvl, scs->static_config.qp);
     // Set the level for inter-intra level
     if (!is_islice && scs->seq_header.enable_interintra_compound) {
-        pcs->inter_intra_level = svt_aom_get_inter_intra_level(enc_mode, (is_base || (is_ref && ppcs->temporal_layer_index < 4)), transition_present);
+        pcs->inter_intra_level = svt_aom_get_inter_intra_level(enc_mode, (is_base || (is_ref && is_not_last_layer)), transition_present);
     } else
         pcs->inter_intra_level = 0;
     if (rtc_tune) {
