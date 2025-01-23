@@ -867,10 +867,10 @@ static int crf_qindex_calc(PictureControlSet *pcs, RATE_CONTROL *rc, int qindex)
 
 #define POWER_QPSC TRUE
 #if POWER_QPSC
-        double qstep_ratio =
+        const double qstep_ratio =
             pcs->scs->static_config.qp_scale_compress_strength == 1? sqrt(ppcs->r0):
-            pcs->scs->static_config.qp_scale_compress_strength == 2? pow(ppcs->r0, 0.40824830532073974609375f):
-            cbrt(ppcs->r0);
+            pcs->scs->static_config.qp_scale_compress_strength == 2? cbrt(ppcs->r0):
+            sqrt(sqrt(ppcs->r0));        
 #else
         double qstep_ratio = sqrt(ppcs->r0) * weight * qp_scale_compress_weight[pcs->scs->static_config.qp_scale_compress_strength];
         if (pcs->scs->static_config.qp_scale_compress_strength) {
