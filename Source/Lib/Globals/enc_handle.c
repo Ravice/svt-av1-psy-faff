@@ -1063,8 +1063,7 @@ static EbErrorType load_default_buffer_configuration_settings(
     else if (lp <= PARALLEL_LEVEL_2) {
         scs->total_process_init_count += (scs->source_based_operations_process_init_count = 1);
         scs->total_process_init_count += (scs->picture_analysis_process_init_count = clamp(1, 1, max_pa_proc));
-        scs->total_process_init_count += (scs->motion_estimation_process_init_count = 1); //cludge for TF2
-        //scs->total_process_init_count += (scs->motion_estimation_process_init_count = clamp(20, 1, max_me_proc));
+        scs->total_process_init_count += (scs->motion_estimation_process_init_count = scs->static_config.enable_tf == 2? 1: clamp(20, 1, max_me_proc)); //cludge for TF2
         scs->total_process_init_count += (scs->tpl_disp_process_init_count = clamp(6, 1, max_tpl_proc));
         scs->total_process_init_count += (scs->mode_decision_configuration_process_init_count = clamp(1, 1, max_mdc_proc));
         scs->total_process_init_count += (scs->enc_dec_process_init_count = clamp(3, scs->picture_control_set_pool_init_count_child, max_md_proc));
@@ -1076,8 +1075,7 @@ static EbErrorType load_default_buffer_configuration_settings(
     else if (lp <= PARALLEL_LEVEL_3) {
         scs->total_process_init_count += (scs->source_based_operations_process_init_count = 1);
         scs->total_process_init_count += (scs->picture_analysis_process_init_count = clamp(1, 1, max_pa_proc));
-        scs->total_process_init_count += (scs->motion_estimation_process_init_count = 1); //cludge for TF2
-        //scs->total_process_init_count += (scs->motion_estimation_process_init_count = clamp(25, 1, max_me_proc));
+        scs->total_process_init_count += (scs->motion_estimation_process_init_count = scs->static_config.enable_tf == 2? 1: clamp(25, 1, max_me_proc)); //cludge for TF2
         scs->total_process_init_count += (scs->tpl_disp_process_init_count = clamp(6, 1, max_tpl_proc));
         scs->total_process_init_count += (scs->mode_decision_configuration_process_init_count = clamp(2, 1, max_mdc_proc));
         scs->total_process_init_count += (scs->enc_dec_process_init_count = clamp(5, scs->picture_control_set_pool_init_count_child, max_md_proc));
@@ -1093,8 +1091,7 @@ static EbErrorType load_default_buffer_configuration_settings(
         }
         scs->total_process_init_count += (scs->source_based_operations_process_init_count = 1);
         scs->total_process_init_count += (scs->picture_analysis_process_init_count = clamp(pa_processes, 1, max_pa_proc));
-        scs->total_process_init_count += (scs->motion_estimation_process_init_count = 1); //cludge for TF2
-        //scs->total_process_init_count += (scs->motion_estimation_process_init_count = clamp(25, 1, max_me_proc));
+        scs->total_process_init_count += (scs->motion_estimation_process_init_count = scs->static_config.enable_tf == 2? 1: clamp(25, 1, max_me_proc)); //cludge for TF2
         scs->total_process_init_count += (scs->tpl_disp_process_init_count = clamp(6, 1, max_tpl_proc));
         scs->total_process_init_count += (scs->mode_decision_configuration_process_init_count = clamp(2, 1, max_mdc_proc));
         scs->total_process_init_count += (scs->enc_dec_process_init_count = clamp(6, scs->picture_control_set_pool_init_count_child, max_md_proc));
@@ -1107,7 +1104,7 @@ static EbErrorType load_default_buffer_configuration_settings(
         const uint8_t pa_processes = scs->static_config.pass == ENC_FIRST_PASS ? 20 : 16;
         scs->total_process_init_count += (scs->source_based_operations_process_init_count = 1);
         scs->total_process_init_count += (scs->picture_analysis_process_init_count = clamp(pa_processes, 1, max_pa_proc));
-        scs->total_process_init_count += (scs->motion_estimation_process_init_count = clamp(25, 1, max_me_proc));
+        scs->total_process_init_count += (scs->motion_estimation_process_init_count = scs->static_config.enable_tf == 2? 1: clamp(25, 1, max_me_proc)); //cludge for TF2
         scs->total_process_init_count += (scs->tpl_disp_process_init_count = clamp(12, 1, max_tpl_proc));
         scs->total_process_init_count += (scs->mode_decision_configuration_process_init_count = clamp(8, 1, max_mdc_proc));
         scs->total_process_init_count += (scs->enc_dec_process_init_count = clamp(8, scs->picture_control_set_pool_init_count_child, max_md_proc));
