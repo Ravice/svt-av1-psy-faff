@@ -8498,7 +8498,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
             if (hierarchical_levels <= 3)
                 pcs->wm_level = is_base ? 1 : 3;
             else
-                pcs->wm_level = (is_base || is_layer1) ? 2 : 3;
+                pcs->wm_level = (is_base || is_layer1) ? 1 : 3;
         } else if (enc_mode <= ENC_M5) {
             if (hierarchical_levels <= 3)
                 pcs->wm_level = is_base ? 1 : 0;
@@ -8793,7 +8793,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     // Set the level for PME search
     if (enc_mode <= ENC_M1)
         pcs->md_pme_level = 1;
-    else if (enc_mode <= ENC_M2)
+    else if (enc_mode <= ENC_M3)
         pcs->md_pme_level = 2;
     else if (enc_mode <= ENC_M7)
         pcs->md_pme_level = 3;
@@ -8809,8 +8809,10 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
         else
             pcs->mds0_level = is_islice ? 2 : 4;
     } else {
-        if (enc_mode <= ENC_M6)
-            pcs->mds0_level = 2;
+        if (enc_mode <= ENC_M3)
+            pcs->mds0_level = 1;    // SSD
+        else if (enc_mode <= ENC_M6)
+            pcs->mds0_level = 2;    // VAR
         else
             pcs->mds0_level = is_islice ? 2 : 4;
     }
