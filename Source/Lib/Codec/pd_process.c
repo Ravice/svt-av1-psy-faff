@@ -690,11 +690,16 @@ static void calc_mini_gop_activity_new(
         (sub_layer_idx1 == L4_1_INDEX || sub_layer_idx1 == L4_3_INDEX)? 4:
         3;
 
+    const float activity_ratio = dg_level & 64?
+        MAX(0.01f, (float)(top_layer_perc_active*2.0f)) / MAX(0.01f, ((float)(sub_layer0_perc_active) + (float)(sub_layer1_perc_active))):
+        1.0f;
+
     const float SBS = (dg_level & 32)? BS*sqrt(BS): BS;
-    const float bias = // exponential bias based on layer depth
+    const float bias = activity_ratio * ( // exponential bias based on layer depth
         (LAYER==5)? BS:
         (LAYER==4)? BS*SBS:
-        BS*SBS*SBS;
+        BS*SBS*SBS
+    );
 
     #define DMG_GEOMEAN TRUE
     const float sub_avg =
@@ -706,6 +711,7 @@ static void calc_mini_gop_activity_new(
     const bool cnd_bias_thresh = DMG_THRESHOLD? ((top_layer_dist > LOW_DIST_TH) && (sub_layer_dist0 < HIGH_DIST_TH) && (sub_layer_dist1 < HIGH_DIST_TH)) :TRUE;
     const bool cnd_bias = cnd_bias_thresh && (dist_ratio < bias);
 
+    #define DMG_DEBUG TRUE
     #ifdef DMG_DEBUG
     if (LAYER==5) printf("\n");
         printf("[DMG] ");
@@ -715,14 +721,14 @@ static void calc_mini_gop_activity_new(
         if (!cnd_bias) {
             printf("no split: ");
             if (!cnd_bias_thresh) printf("low L%u distortion\t", LAYER+1);
-            if (dist_ratio > bias) printf("required distortion bias: %.2f > %.2f\t", dist_ratio, bias);
+            if (dist_ratio > bias) printf("required distortion bias: %.2f > %.2f (act: %.2f)\t", dist_ratio, bias, activity_ratio);
             printf("\n");
         }
     #endif
 
     if (cnd_bias) {
         #ifdef DMG_DEBUG
-            printf("splitting: distortion %.2f < %.2f\n", dist_ratio, bias);
+            printf("splitting: distortion %.2f < %.2f (act: %.2f)\n", dist_ratio, bias, activity_ratio);
         #endif
         ctx->mini_gop_activity_array[top_layer_idx] = TRUE;
         ctx->mini_gop_activity_array[sub_layer_idx0] = FALSE;
