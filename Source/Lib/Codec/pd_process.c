@@ -695,11 +695,11 @@ static void calc_mini_gop_activity_new(
         1.0f;
 
     const float SBS = (dg_level & 32)? BS*sqrt(BS): BS;
-    const float bias = activity_ratio * ( // exponential bias based on layer depth
+    const float bias = MIN(1.0f, activity_ratio * ( // exponential bias based on layer depth
         (LAYER==5)? BS:
         (LAYER==4)? BS*SBS:
         BS*SBS*SBS
-    );
+    ));
 
     #define DMG_GEOMEAN TRUE
     const float sub_avg =
@@ -707,9 +707,10 @@ static void calc_mini_gop_activity_new(
         0.5f * (float)(sub_layer_dist0 + sub_layer_dist1);
     const float dist_ratio = (top_layer_dist > 0)? (sub_avg / (float)top_layer_dist) : 255.0f;
 
-    #define DMG_THRESHOLD FALSE
-    const bool cnd_bias_thresh = DMG_THRESHOLD? ((top_layer_dist > LOW_DIST_TH) && (sub_layer_dist0 < HIGH_DIST_TH) && (sub_layer_dist1 < HIGH_DIST_TH)) :TRUE;
-    const bool cnd_bias = cnd_bias_thresh && (dist_ratio < bias);
+    #define DMG_THRESHOLD TRUE
+    const bool cnd_bias_thresh_low = DMG_THRESHOLD? ((top_layer_dist > LOW_DIST_TH)) : TRUE;
+    const bool cnd_bias_thresh_high = DMG_THRESHOLD? ((sub_layer_dist0 < HIGH_DIST_TH) && (sub_layer_dist1 < HIGH_DIST_TH)) : TRUE;
+    const bool cnd_bias = cnd_bias_thresh_high && cnd_bias_thresh_low && (dist_ratio < bias);
 
     #define DMG_DEBUG TRUE
     #ifdef DMG_DEBUG
@@ -720,7 +721,8 @@ static void calc_mini_gop_activity_new(
         printf("distortion: (%llu:%llu | %llu)\t", sub_layer_dist0, sub_layer_dist1, top_layer_dist);
         if (!cnd_bias) {
             printf("no split: ");
-            if (!cnd_bias_thresh) printf("low L%u distortion\t", LAYER+1);
+            if (!cnd_bias_thresh_low) printf("low L%u distortion\t", LAYER+1);
+            if (!cnd_bias_thresh_high) printf("high L%u distortion\t", LAYER);
             if (dist_ratio > bias) printf("required distortion bias: %.2f > %.2f (act: %.2f)\t", dist_ratio, bias, activity_ratio);
             printf("\n");
         }
