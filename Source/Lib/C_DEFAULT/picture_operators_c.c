@@ -86,13 +86,9 @@ uint64_t svt_spatial_psy_distortion_kernel_c(uint8_t* input, uint32_t input_offs
                                               uint8_t* recon, int32_t recon_offset, uint32_t recon_stride,
                                               uint32_t area_width, uint32_t area_height, double psy_rd) {
     uint64_t spatial_distortion = 0;
-
-    // const double psy_rd   = 2.0f;
-    const uint32_t count = area_width * area_height;
-
     uint64_t psy_distortion = 0;
 
-    if (count >= 64 && psy_rd > 0.0) {
+    if (psy_rd > 0.0) {
         uint64_t ac_distortion = svt_psy_distortion(input + input_offset, input_stride, recon + recon_offset, recon_stride, area_width, area_height);
         psy_distortion = (uint64_t)(ac_distortion * psy_rd);
     }
@@ -119,7 +115,8 @@ uint64_t svt_spatial_psy_distortion_kernel_c(uint8_t* input, uint32_t input_offs
 uint64_t svt_spatial_full_distortion_kernel_facade(uint8_t* input, uint32_t input_offset, uint32_t input_stride,
                                                    uint8_t* recon, int32_t recon_offset, uint32_t recon_stride,
                                                    uint32_t area_width, uint32_t area_height, bool hbd_md, PredictionMode mode,
-                                                   CompoundType compound_type, uint8_t temporal_layer_index, Bool spy_rd) {
+                                                   CompoundType compound_type, uint8_t temporal_layer_index,
+                                                   double psy_rd, Bool spy_rd) {
 
     EbSpatialFullDistType spatial_full_dist_type_fun = hbd_md ? svt_full_distortion_kernel16_bits
                                                               : svt_spatial_full_distortion_kernel;
@@ -136,18 +133,20 @@ uint64_t svt_spatial_full_distortion_kernel_facade(uint8_t* input, uint32_t inpu
 
     if (spy_rd) {
         if (mode == DC_PRED || mode == SMOOTH_PRED || mode == SMOOTH_V_PRED || mode == SMOOTH_H_PRED) {
-            // Strong bias against "visually blurry" intra prediction modes
-            spatial_distortion = (spatial_distortion * 3) / 2;
+            if (psy_rd == 0.0) {
+                // Medium bias against "visually blurry" intra prediction modes
+                spatial_distortion = (spatial_distortion * 5) / 4;
+            }
         } else if (mode == H_PRED || mode == V_PRED || mode == PAETH_PRED) {
             // Mild bias against "visually neutral" intra prediction modes
             spatial_distortion = (spatial_distortion * 9) / 8;
         } else if (mode >= COMP_INTER_MODE_START && mode < COMP_INTER_MODE_END) {
             if (compound_type == COMPOUND_AVERAGE || compound_type == COMPOUND_DISTWTD) {
-                // Mild bias against "visually blurry" compound inter prediction modes
-                spatial_distortion = (spatial_distortion * 9) / 8;
+                // Medium bias against "visually blurry" compound inter prediction modes
+                spatial_distortion = (spatial_distortion * 5) / 4;
             } else if (compound_type == COMPOUND_DIFFWTD) {
-                // Very mild bias against difference-weighted inter prediction mode
-                spatial_distortion = (spatial_distortion * 17) / 16;
+                // Mild bias against difference-weighted inter prediction mode
+                spatial_distortion = (spatial_distortion * 9) / 8;
             }
         }
 
