@@ -7043,11 +7043,6 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level) {
         ctrls->enable_cost_based_early_exit = 0;
         ctrls->mds0_distortion_th           = 0;
         break;
-    case 5:
-        ctrls->mds0_dist_type               = SAD;
-        ctrls->enable_cost_based_early_exit = 0;
-        ctrls->mds0_distortion_th           = 0;
-        break;
     default: assert(0); break;
     }
 }
@@ -8841,7 +8836,6 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
         else
             pcs->mds0_level = is_islice ? 2 : 4;
         }
-    }
     /*
        disallow_4x4
     */
