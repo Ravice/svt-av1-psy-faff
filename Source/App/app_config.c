@@ -225,6 +225,8 @@
 
 #define PSY_RD_TOKEN "--psy-rd"
 #define SPY_RD_TOKEN "--spy-rd"
+#define SHARP_TX_TOKEN "--sharp-tx"
+#define HBD_MD_TOKEN "--hbd-md"
 
 static EbErrorType validate_error(EbErrorType err, const char *token, const char *value) {
     switch (err) {
@@ -1277,7 +1279,7 @@ ConfigEntry config_entry_psy[] = {
     // Sharpness
     {SINGLE_INPUT,
      SHARPNESS_TOKEN,
-     "[PSY] Affects loopfilter deblock sharpness and rate distortion, default is 0 [-7 to 7]",
+     "[PSY] Affects loopfilter deblock sharpness and rate distortion, default is 1 [0 to 7]",
      set_cfg_generic_token},
     // QP scale compress
     {SINGLE_INPUT,
@@ -1302,12 +1304,12 @@ ConfigEntry config_entry_psy[] = {
     // Temporal filtering strength
     {SINGLE_INPUT,
      TF_STRENGTH_FILTER_TOKEN,
-     "[PSY] Adjust temporal filtering strength, default is 1 [0-4]",
+     "[PSY] Adjust alt-ref temporal filtering strength, default is 1 [0-4]",
      set_cfg_generic_token},
     // Keyframe temporal filtering strength
     {SINGLE_INPUT,
      KF_TF_STRENGTH_FILTER_TOKEN,
-     "[PSY] Adjust TF strength on keyframes, default is 1 [0-4]",
+     "[PSY] Adjust alt-ref TF strength on keyframes, default is 1 [0-4]",
      set_cfg_generic_token},
     // Min/max chroma qm
     {SINGLE_INPUT,
@@ -1320,15 +1322,23 @@ ConfigEntry config_entry_psy[] = {
      set_cfg_generic_token},
     {SINGLE_INPUT,
      NOISE_NORM_STRENGTH_TOKEN,
-     "[PSY] Noise normalization strength, default is 0 [0-4]",
+     "[PSY] Noise normalization strength, default is 0, default for tune=3 is 3 [0-4]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
      PSY_RD_TOKEN,
-     "[PSY] Psychovisual rate distortion strength, default is 0 [0.0-6.0]",
+     "[PSY] Psychovisual rate distortion strength, default is 0.5; high quality mode activated at >=0.6 [0.0-6.0]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
      SPY_RD_TOKEN,
      "[PSY] Alternative psychovisual rate distortion, default is 0 [0-1]",
+     set_cfg_generic_token},
+     {SINGLE_INPUT,
+     SHARP_TX_TOKEN,
+     "[PSY] Sharp transform optimization, default is 1; best used in combination with psy-rd [0-1]",
+     set_cfg_generic_token},
+     {SINGLE_INPUT,
+     HBD_MD_TOKEN,
+     "[PSY] High Bit-Depth Mode Decision, default is 0 [0: default preset behavior, 1 = 10-bit, 2 = hybrid 8/10-bit, 3 = 8-bit]",
      set_cfg_generic_token},
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
@@ -1552,6 +1562,12 @@ ConfigEntry config_entry[] = {
 
     // Spy rd
     {SINGLE_INPUT, SPY_RD_TOKEN, "SpyRd", set_cfg_generic_token},
+
+    // Sharp TX
+    {SINGLE_INPUT, SHARP_TX_TOKEN, "SharpTX", set_cfg_generic_token},
+
+    // HBD-MD
+    {SINGLE_INPUT, HBD_MD_TOKEN, "HBDMD", set_cfg_generic_token},
 
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};

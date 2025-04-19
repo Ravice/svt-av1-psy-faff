@@ -1968,15 +1968,32 @@ void svt_aom_sig_deriv_multi_processes(SequenceControlSet *scs, PictureParentCon
 #else
     pcs->tune_tpl_for_chroma = 0;
 #endif
-    if (scs->enable_hbd_mode_decision == DEFAULT)
-        if (enc_mode <= ENC_M3)
+    if (scs->enable_hbd_mode_decision == DEFAULT) {
+
+    if (pcs->scs->static_config.hbd_md == 0) {
+        if (enc_mode <= ENC_M2)
             pcs->hbd_md = 1;
-        else if (enc_mode <= ENC_M4)
+        //Empiral testing shows enabling full 10-bit MD greatly increases
+        //psy-rd performance once it becomes strong enough (>=0.6)
+        else if (enc_mode <= ENC_M4 && pcs->scs->static_config.psy_rd >= 0.6)
+            pcs->hbd_md = 1;
+        else if (enc_mode <= ENC_M6 && pcs->scs->static_config.psy_rd >= 0.6)
             pcs->hbd_md = 2;
         else if (enc_mode <= ENC_M7)
             pcs->hbd_md = is_base ? 2 : 0;
         else
             pcs->hbd_md = is_islice ? 2 : 0;
+
+    } else if (pcs->scs->static_config.hbd_md == 1){
+        pcs->hbd_md = 1;
+
+    } else if (pcs->scs->static_config.hbd_md == 2) {
+        pcs->hbd_md = 2;
+
+    } else if (pcs->scs->static_config.hbd_md == 3) {
+        pcs->hbd_md = 3;
+    }
+}
     else
         pcs->hbd_md = scs->enable_hbd_mode_decision;
 
@@ -7020,6 +7037,11 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level) {
         ctrls->mds0_dist_type               = VAR;
         ctrls->enable_cost_based_early_exit = 1;
         ctrls->mds0_distortion_th           = 0;
+    //Special mds0_level for psy-rd usage
+    case 5:
+        ctrls->mds0_dist_type               = SAD;
+        ctrls->enable_cost_based_early_exit = 0;
+        ctrls->mds0_distortion_th           = 0;
         break;
     case 5:
         ctrls->mds0_dist_type               = SAD;
@@ -8814,12 +8836,11 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
         else
             pcs->mds0_level = is_islice ? 2 : 4;
     } else {
-        if (enc_mode <= ENC_M3)
-            pcs->mds0_level = 1;    // 1 SSD // 2 VAR // 5 SAD
-        else if (enc_mode <= ENC_M6)
-            pcs->mds0_level = 2;    // VAR
+        if (enc_mode <= ENC_M6)
+            pcs->mds0_level = 2;
         else
             pcs->mds0_level = is_islice ? 2 : 4;
+        }
     }
     /*
        disallow_4x4
