@@ -243,8 +243,6 @@ uint64_t svt_psy_distortion_hbd(const uint16_t* input, uint32_t input_stride,
     static uint16_t zero_buffer[8] = { 0 };
     uint64_t total_nrg = 0;
 
-    uint64_t total_nrg = 0;
-
     if (width >= 8 && height >= 8) { /* 8x8 or larger */
         for (uint64_t i = 0; i < height; i += 8) {
             for (uint64_t j = 0; j < width; j += 8) {

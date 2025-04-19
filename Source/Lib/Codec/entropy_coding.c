@@ -3094,7 +3094,7 @@ static void write_film_grain_params(PictureParentControlSet *pcs, struct AomWrit
     } else
         pars->update_parameters = 1;
 
-    double strength = 0.75;
+    double strength = 1.0;
 
     // Scaling functions parameters
     svt_aom_wb_write_literal(wb, pars->num_y_points, 4); // max 14

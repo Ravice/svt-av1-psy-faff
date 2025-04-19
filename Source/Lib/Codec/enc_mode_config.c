@@ -7021,6 +7021,11 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level) {
         ctrls->enable_cost_based_early_exit = 1;
         ctrls->mds0_distortion_th           = 0;
         break;
+    case 5:
+        ctrls->mds0_dist_type               = SAD;
+        ctrls->enable_cost_based_early_exit = 0;
+        ctrls->mds0_distortion_th           = 0;
+        break;
     default: assert(0); break;
     }
 }
@@ -7842,7 +7847,7 @@ void svt_aom_sig_deriv_enc_dec(SequenceControlSet *scs, PictureControlSet *pcs, 
     else if (enc_mode <= ENC_M1)
         intra_level = is_base ? 1 : 2;
     else if (enc_mode <= ENC_M2)
-        intra_level = is_base ? 1 : 3;
+        intra_level = is_base ? 1 : MIN(3, pcs->temporal_layer_index);
     else if (enc_mode <= ENC_M3)
         intra_level = is_base ? 1 : MIN(4, pcs->temporal_layer_index);
     else if (enc_mode <= ENC_M4)
@@ -8810,7 +8815,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
             pcs->mds0_level = is_islice ? 2 : 4;
     } else {
         if (enc_mode <= ENC_M3)
-            pcs->mds0_level = 1;    // SSD
+            pcs->mds0_level = 1;    // 1 SSD // 2 VAR // 5 SAD
         else if (enc_mode <= ENC_M6)
             pcs->mds0_level = 2;    // VAR
         else

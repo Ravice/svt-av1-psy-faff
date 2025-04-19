@@ -2310,7 +2310,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                     cropped_tx_width_uv,
                     cropped_tx_height_uv,
                     ctx->hbd_md,
-                    pcs->scs->static_config.psy_rd);*/
+                    pcs->scs->static_config.psy_rd);
                 // Workaround: re-use prediction psy distortion for the residual until we figure out why psy-rd
                 // is misbehaving at low CRFs and high presets with inter pred
                 txb_full_distortion[DIST_SSD][1][DIST_CALC_RESIDUAL] += get_svt_psy_full_dist(
@@ -2543,7 +2543,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                     cropped_tx_width_uv,
                     cropped_tx_height_uv,
                     ctx->hbd_md,
-                    pcs->scs->static_config.psy_rd);*/
+                    pcs->scs->static_config.psy_rd);
                 // Workaround: re-use prediction psy distortion for the residual until we figure out why psy-rd
                 // is misbehaving at low CRFs and high presets with inter pred
                 txb_full_distortion[DIST_SSD][2][DIST_CALC_RESIDUAL] += get_svt_psy_full_dist(

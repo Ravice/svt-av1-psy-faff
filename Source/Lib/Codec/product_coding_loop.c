@@ -4851,7 +4851,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                     cropped_tx_width,
                     cropped_tx_height,
                     ctx->hbd_md,
-                    pcs->scs->static_config.psy_rd);*/
+                    pcs->scs->static_config.psy_rd);
                 // Workaround: re-use prediction psy distortion for the residual until we figure out why psy-rd
                 // is misbehaving at low CRFs and high presets with inter pred
                 txb_full_distortion_txt[DIST_SSD][tx_type][DIST_CALC_RESIDUAL] += get_svt_psy_full_dist(
@@ -5810,7 +5810,7 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                                                  cropped_tx_width,
                                                                                  cropped_tx_height,
                                                                                  ctx->hbd_md,
-                                                                                 pcs->scs->static_config.psy_rd);*/
+                                                                                 pcs->scs->static_config.psy_rd);
         // Workaround: re-use prediction psy distortion for the residual until we figure out why psy-rd
         // is misbehaving at low CRFs and high presets with inter pred
         y_full_distortion[DIST_SSD][DIST_CALC_RESIDUAL] += get_svt_psy_full_dist(input_pic->buffer_y,

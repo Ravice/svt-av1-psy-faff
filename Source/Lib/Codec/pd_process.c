@@ -707,7 +707,7 @@ static void calc_mini_gop_activity_new(
         0.5f * (float)(sub_layer_dist0 + sub_layer_dist1);
     const float dist_ratio = (top_layer_dist > 0)? (sub_avg / (float)top_layer_dist) : 255.0f;
 
-    #define DMG_THRESHOLD TRUE
+    #define DMG_THRESHOLD FALSE
     const bool cnd_bias_thresh_low = DMG_THRESHOLD? ((top_layer_dist > LOW_DIST_TH)) : TRUE;
     const bool cnd_bias_thresh_high = DMG_THRESHOLD? ((sub_layer_dist0 < HIGH_DIST_TH) && (sub_layer_dist1 < HIGH_DIST_TH)) : TRUE;
     const bool cnd_bias = cnd_bias_thresh_high && cnd_bias_thresh_low && (dist_ratio < bias);
